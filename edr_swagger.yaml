@@ -1,0 +1,253 @@
+---
+swagger: "2.0"
+info:
+  description: "There are APIs for iML Pattern Analysis"
+  version: "1.0.0"
+  title: "Template API"
+  contact:
+    email: "hoangdn6@viettel.com.vn"
+  license:
+    name: "VSC"
+host: "api.dev.iml.sirc.viettel.com"
+basePath: "/v2/hunting"
+tags:
+  - name: "edr"
+    description: "API call EDR"
+    externalDocs:
+      description: "Find out more"
+      url: "http://swagger.io"
+schemes:
+  - "http"
+paths:
+  /edr/search-agent:
+    post:
+      tags:
+        - edr
+      summary: "Search agent from EDR"
+      description: "Call API search agent from EDR"
+      operationId: "search_agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: body
+          description: Query list agents from EDR
+          schema:
+            type: object
+            properties:
+              hostname:
+                type: string
+                example: ANM-CHUYENNT2
+              since:
+                type: integer
+                maximum: 1000
+                minimum: 0
+                example: 0
+              limit:
+                type: integer
+                maximum: 100
+                minimum: 0
+                example: 10
+      responses:
+        200:
+          description: "Summary rules match patterns"
+          schema:
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    query_name:
+                      type: string
+                    count_fp:
+                      type: integer
+                    count_miss:
+                      type: integer
+                    total_fp:
+                      type: integer
+                    total_miss:
+                      type: integer
+                    object_count:
+                      type: integer
+      x-swagger-router-controller: "application.controllers.edr_controller"
+  /edr/agents:
+    get:
+      tags:
+        - edr
+      summary: "Search agent from EDR"
+      description: "Call API search agent from EDR"
+      operationId: "get_customer_agent_id"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "customer_id"
+          in: "query"
+          description: "Customer to get agents"
+          type: "string"
+        - name: "_from"
+          in: "query"
+          description: "Customer to get agents"
+          type: "integer"
+        - name: "_size"
+          in: "query"
+          description: "Customer to get agents"
+          type: "integer"
+      responses:
+        200:
+          description: "Summary rules match patterns"
+          schema:
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    customer_id:
+                      type: string
+                    agentId:
+                      type: string
+                    device_type:
+                      type: string
+                    hostname:
+                      type: string
+                    ip:
+                      type: string
+                    status:
+                      type: boolean
+              count:
+                type: integer
+      x-swagger-router-controller: "application.controllers.edr_controller"
+    post:
+      tags:
+        - edr
+      summary: "Run script EDR"
+      description: "Call API run script EDR"
+      operationId: "run_script"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: body
+          description: Query run script agents EDR
+          schema:
+            type: object
+            properties:
+              customer_id:
+                type: string
+                example: ANM
+              campaign_name:
+                type: string
+                example: Campaign_1
+              hunting_type:
+                type: string
+                example: period
+              agents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    agent_id:
+                      type: string
+                      example: 1887AC84830F563E4E16AFC561235FF3F9BE9C6D
+                    hostname:
+                      type: string
+                      example: ANM-CHUYENNT2
+                    ip:
+                      type: string
+                      example: "192.168.5.8"
+                    device_type:
+                      type: string
+                      example: "linux"
+                    status:
+                      type: boolean
+      responses:
+        200:
+          description: "Summary rules match patterns"
+          schema:
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    customer_id:
+                      type: string
+                    agentId:
+                      type: string
+                    device_type:
+                      type: string
+                    hostname:
+                      type: string
+                    ip:
+                      type: string
+                    status:
+                      type: boolean
+              count:
+                type: integer
+      x-swagger-router-controller: "application.controllers.edr_controller"
+  /edr/upload:
+
+definitions:
+  ApiErrorResponse:
+    type: "object"
+    required:
+      - "status"
+      - "detail"
+    properties:
+      status:
+        type: "integer"
+        format: "int32"
+        example: 1000
+        description: "Mã lỗi"
+      detail:
+        type: "string"
+        example: "Invalid param"
+        description: "Thông tin lỗi"
+      title:
+        type: "string"
+        description: "Title lỗi"
+    xml:
+      name: "ApiErrorResponse"
+  ApiResponse:
+    type: "object"
+    properties:
+      status:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      detail:
+        type: "string"
+    example:
+      status: 0
+      type: "type"
+      detail: "message"
+  ApiGetResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      data:
+        type: "array"
+        items:
+          type: "object"
+          properties: {}
+      count:
+        type: "integer"
+        format: "int32"
+    example:
+      code: 0
+      data:
+        - "{}"
+        - "{}"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
