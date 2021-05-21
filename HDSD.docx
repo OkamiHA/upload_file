@@ -1,0 +1,438 @@
+4.7	Hướng dẫn tích hợp các hệ thống trong hệ sinh thái VCS
+4.7.1	Hướng dẫn tích hợp SOAR (VCS-CyCir)
+Mô hình tích hợp SOAR với Ajiant theo cơ chế PULL (SOAR chủ động query API của Ajiant)
+Phía SOAR cần sử dụng 1 tài khoản soar được cung cấp với các permission phù hợp.
+Quản trị Ajiant vào portal tạo user soar với Role: default, manage_containment, manage_proxy, manage_response_scenario, view_agent_management.
+Danh sách API được cung cấp cho SOAR như sau (Giả sử <ajiant-ip> là ip của server Ajiant):
+4.7.1.1	Đăng nhập, lấy access token
+URL	https://<ajiant-ip>/authentication/SignIn
+
+Method	POST
+Params	
+Body	{"username":"soar","password":"s0@r&3dr2020"}
+Response	{
+    "access_token": "{token}",
+    "refresh_token": "{refresh_token}",
+    "success": "true",
+}
+4.7.1.2	Lấy thông tin các agents
+	
+URL	https://<ajiant-ip>/agentManagement/QueryAgentInfoExtended
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+"agents":["0662DA39B914DC01BE6A418C63122797461DF160"],"infos": [
+"hostInfo", "netInterfaces", "cfgInfos", "first_ping", "group_id", "last_ping", "update_group", "policy", "ip"]
+}
+Response	{
+  "agent_infos": [
+    {
+      "agentId": "000270B3949178B4FABA9FBB6DAEA5DE6C640876", 
+      "netInterfaces": "", 
+      "cfgInfos": true, 
+      "online": false, 
+      "first_ping": "2020-01-08T16:14:50+07:00",
+      "group_id": "default ", 
+      "last_ping": "2020-01-08T16:14:50+07:00",
+      "update_group": "alpha",
+      "policy ": "alpha",
+      "ip": "10.61.188.2"
+    }
+   ],
+  "success": "true",
+}
+4.7.1.3	Tìm kiếm danh sách các agents
+URL	https://<ajiant-ip>/agentManagement/Search
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	Đối vs IP:
+{"query":{"compare":{"field":"netInterfaces.addresses","function":null,"operator":"=","value":"10.0.3.15"}},"since":0,"limit":50}
+Đối với hostname:
+{"query":{"compare":{"field":"hostInfo.computerName","function":null,"operator":"=","value":"ANM-CHUYENNT"}},"since":0,"limit":50}
+Response	{
+  "agent_infos": [
+    {
+      "FirstPingTimeStamp": 1577529999, 
+      "LastPingTimeStamp": 1592822296, 
+      "agentId": "59221A0A9179C465DCD95A4E6F38D2E78E2126DF", 
+      "agent_active": "true", 
+      "agent_time": "2020-06-22T03:45:17-07:00", 
+      "cfgInfos": [
+        {
+          "hash": "da8d0e3f1914de1172c2871a9e576c27dd6f359f", 
+          "key": "1_ServiceList"
+        }, 
+        {
+          "hash": "9f67c7af4b749d866037d40710ecd33fce084d56", 
+          "key": "4_PluginList"
+        }
+      ], 
+      "first_ping": "2019-12-28T17:46:39+07:00", 
+      "group_id": "default", 
+      "hostInfo": {
+        "architecture": "amd64", 
+        "computerName": "DESKTOP-HHN2B1Q", 
+        "cpus": [
+          {
+            "cores": "1", 
+            "mhz": "3408.000000", 
+            "modelName": "Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz", 
+            "vendorID": "GenuineIntel"
+          }
+        ], 
+        "defaultGateway": "10.0.2.2", 
+        "dnsServers": [
+          "192.168.4.111", 
+          "192.168.4.222"
+        ], 
+        "hostID": "9806bf8e-9bd7-47c4-a812-6401451597a0", 
+        "os": "windows", 
+        "platform": "Microsoft Windows 10 Pro", 
+        "platformFamily": "Standalone Workstation", 
+        "platformVersion": "10.0.14393 Build 14393"
+      }, 
+      "ip": "10.61.188.2", 
+      "last_ping": "2020-06-22T17:38:16+07:00", 
+      "netInterfaces": [
+        {
+          "addresses": [
+            "fe80::d5bf:2bfc:6256:235c", 
+            "10.0.2.15"
+          ], 
+          "mac": "08:00:27:02:dd:d4", 
+          "name": "Ethernet"
+        }, 
+        {
+          "addresses": [
+            "fe80::b93b:3cb9:4652:b461", 
+            "10.0.3.15"
+          ], 
+          "mac": "08:00:27:ff:cb:fb", 
+          "name": "Ethernet 2"
+        }, 
+        {
+          "addresses": [
+            "::1", 
+            "127.0.0.1"
+          ], 
+          "name": "Loopback Pseudo-Interface 1"
+        }, 
+        {
+          "addresses": [
+            "fe80::5efe:a00:30f"
+          ], 
+          "mac": "00:00:00:00:00:00:00:e0", 
+          "name": "isatap.{B1D12A2F-A274-478A-95AD-1B3D31CFCC96}"
+        }, 
+        {
+          "addresses": [
+            "fe80::ffff:ffff:fffe"
+          ], 
+          "mac": "00:00:00:00:00:00:00:e0", 
+          "name": "Teredo Tunneling Pseudo-Interface"
+        }, 
+        {
+          "addresses": [
+            "fe80::5efe:a00:20f"
+          ], 
+          "mac": "00:00:00:00:00:00:00:e0", 
+          "name": "isatap.{3F33FBCC-94A3-4EE5-9B76-A17ADEE7591C}"
+        }
+      ], 
+      "online": "false", 
+      "policy": "default", 
+      "suggest": {
+        "IP": [
+          "fe80::d5bf:2bfc:6256:235c", 
+          "10.0.2.15", 
+          "fe80::b93b:3cb9:4652:b461", 
+          "10.0.3.15", 
+          "::1", 
+          "127.0.0.1", 
+          "fe80::5efe:a00:30f", 
+          "fe80::ffff:ffff:fffe", 
+          "fe80::5efe:a00:20f"
+        ], 
+        "MAC": [
+          "08:00:27:02:dd:d4", 
+          "08:00:27:ff:cb:fb", 
+          "", 
+          "00:00:00:00:00:00:00:e0", 
+          "00:00:00:00:00:00:00:e0", 
+          "00:00:00:00:00:00:00:e0"
+        ]
+      }, 
+      "update_group": "test_ping"
+    }
+  ], 
+  "success": true, 
+  "total": 1
+}
+
+4.7.1.4	Thao tác trên các agents
+URL	https://<ajiant-ip>/proxyHandler/ExecuteAction
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{"target_agents":["0662DA39B914DC01BE6A418C63122797461DF160"],"action": { "type": "KILL_PROCESS/DELETE_FILE/DELETE_KEY", "value": "{string}"}}
+Response	{
+  "req_id": "{string}",
+  "success": "true",
+}
+Example	Body:
+{
+	"target_agents": ["F2B26626DBC03335580116032545742C8F2101A7"],
+	"action": {
+		"value": "HKLM\\SOFTWARE\\7-Zip",
+		"type": "DELETE_KEY"
+	}
+}
+Response:
+{
+    "success": true,
+    "req_id": "uuEU4iCIj75fVeJL"
+}
+4.7.1.5	Xem kết quả
+URL	https://<ajiant-ip>/responseScenarioHandler/ViewResult
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+    "req_id": "{string}",
+    "agent_id": "F2B26626DBC03335580116032545742C8F2101A7"
+}
+Response	{
+    "success": true,
+    "agent_id": "F2B26626DBC03335580116032545742C8F2101A7",
+    "req_id": "4oSiLlfTu46ghxDI",
+    "object_list": [
+        {
+            "object": "C:\\Users\\datnt88-win10\\Downloads\\test.txt",
+            "type": 1,
+            "action": 1,
+            "result": "successed"
+        }
+    ]
+}
+Example	Body:
+{
+	"req_id": "uuEU4iCIj75fVeJL",
+	"agent_id": "F2B26626DBC03335580116032545742C8F2101A7"
+}
+Response: 
+{
+    "success": true,
+    "agent_id": "F2B26626DBC03335580116032545742C8F2101A7",
+    "req_id": "uuEU4iCIj75fVeJL",
+    "object_list": [
+        {
+            "object": "HKLM\\SOFTWARE\\7-Zip",
+            "type": 3,
+            "action": 1,
+            "result": "successed"
+        }
+    ]
+}
+4.7.1.6	Lấy file dưới agents
+Cho phép người dùng lấy file dưới agent, có các rằng buộc sau:
+o	Agent phải online
+o	File tối đa 10MB
+o	Link lưu trữ trong 30 ngày (cấu hình được)
+Phần này gồm có 2 API tương ứng 2 công việc cần thực hiện: SendRequestGetFile, GetFileResult.
+•	SendRequestGetFile:
+Cho phép người dùng gửi request đến agent để lấy thông tin của 1 file nào đó.
+URL	https://<ajiant-ip>/proxyHandler/SendRequestGetFile
+
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+ "agent_id": "59C5B14E55866C90DF725E55F14C8063594C93ED",
+ "full_path": "C:\\Windows\\System32\\svchost.exe"
+}
+Response	{
+    "success": true,
+    "req_id": "9j9dHVfBhwQkn2s6"
+}
+
+•	GetFileResult
+Cho phép người dung lấy kết quả sau khi yêu cầu lấy file từ dưới agent thông qua requestId
+URL	https://<ajiant-ip>/proxyHandler/GetFileResult
+
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+ "agent_id": "59C5B14E55866C90DF725E55F14C8063594C93ED",
+ "request_id": "K0OxejJrIxbvdGcX"
+}
+Response	1. Khi thành công
+{
+    "status": "successed",
+    "message": "",
+    "download_url": "https://10.255.250.97/proxyHandler/DownloadFile?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZXN1bHRfaWQiOiJmYnYxUEhjQmxRZkp6czhIU2VPUCIsImV4cCI6MTYxMTYzNjUyNH0.zGsQh6ywsQJs65FHvrjlL4wDhd65Wn6w-mZsSQmxMMA"
+}
+Link download sẽ tồn tại trong 30 ngày 
+
+2. Nếu thất bại
+2.1 Khi thời gian request đến server bị quá thời gian cho phép (hiện tại đang để 10 phút)
+{
+    "status": "failed",
+    "message": "Reques Timeout",
+    "download_url": ""
+}
+2.2 Khi trường hợp file vượt quá dung lượng cho phép
+{
+    "status": "failed",
+    "message": "Invalid file size",
+    "download_url": ""
+}
+2.3 Khi trường hợp file không tồn tại
+{
+    "status": "failed",
+    "message": "File is not exist",
+    "download_url": ""
+}
+3. Pending: trường hợp db chưa lấy được kết quả của agnet gửi lên và vẫn trong thời gian cho phép
+{
+    "status": "pending",
+    "message": "",
+    "download_url": ""
+}
+
+
+4.7.1.7	Đẩy tool rà quét xuống các agents
+Cho phép người dùng đẩy tool rà quét xuống agent để lấy log kết quả.
+Phần này gồm có 3 API tương ứng 3 công việc cần thực hiện: UploadTool, DeployTool, GetToolResult.
+•	UploadTool:
+Thông tin api
+input	file_content: string; convert file sang base64
+file_name: string
+file_version: string
+parameters: string
+platform: string
+file_type: string
+architecture: string
+Output
+	status: successed/failed
+message: error data (nếu có)
+file_id: được dùng để đẩy yêu cầu
+
+URL	https://<ajiant-ip>/proxyHandler/UploadTool
+
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+    "file_name": "win_sleep_5s.bat",
+    "file_version": "v1",
+    "parameters": "",
+    "file_type": "bat",
+    "platform": "windows",
+    "architecture": "x64",
+    "file_content": "QGVjaG8gb2ZmCnRpbWVvdXQgNQplY2hvIGhlbGxvCg=="
+}
+Response	{
+    "success": true,
+    "tool_id": "6020a21bb089b60001623760"
+}
+
+
+•	DeployTool: Cho phép người dùng deploy tool xuống các agent thông qua tool_id của tool đã được upload lên server.
+Thông tin api:
+input	request_id: string
+Output
+	{
+    "result_list": [
+        {
+            "agent_id": string,
+            "data": string, base64
+            "status": successed/pending/failed,
+            "message": ""
+        }
+    ]
+}
+Ràng buộc	data kích thước tối đa 10MB
+
+URL	https://<ajiant-ip>/proxyHandler/SendRequestGetFile
+
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+    "tool_id": "6020af9db089b60001623764",
+    "agent_id_list": ["07DC8C7154AB47371E9595AF52F88E43478F8CC4", "0F7A4F3D421FBDC4FDE0FB120BEC8A647A00DD6E"]
+}
+Response	1. trường hợp không có agent offline 
+{
+    "request_id": "inVOZqErWwohTSSr",
+    "status": "successed",
+    "message": "",
+    "agent_offline_list": []
+}
+2. trường hợp có agent offline
+{
+    "request_id": "QmBWKkMkv4tckJf0",
+    "status": "successed",
+    "message": "",
+    "agent_offline_list": [
+        "0F7A4F3D421FBDC4FDE0FB120BEC8A647A00DD6E"
+    ]
+}
+3. trường hợp pending
+{
+    "status": "pending",
+    "message": "",
+    "agent_offline_list": [
+        "0F7A4F3D421FBDC4FDE0FB120BEC8A647A00DD6E"
+    ]
+}
+
+•	GetToolResult: Cho phép người dùng lấy thông tin log rà quét được từ tool đã deploy thông qua requestid
+Thông tin api:
+input	request_id: string
+Output
+	{
+    "result_list": [
+        {
+            "agent_id": string,
+            "data": string, base64
+            "status": successed/pending/failed,
+            "message": ""
+        }
+    ]
+}
+Ràng buộc	data kích thước tối đa 10MB
+
+URL	https://<ajiant-ip>/proxyHandler/GetToolResult
+
+Method	POST
+Headers	Authorization Bearer token
+Params	
+Body	{
+    "request_id": "Q0LOwTTzXstbPmPR"
+}
+Response	{
+    "result_list": [
+        {
+            "agent_id": "B87EFBF3B36A9B8585CA1443E39A0E9F3373A8FF",
+            "data": "UHJvZ3JhbSB0b28gYmlnIHRvIGZpdCBpbiBtZW1vcnkNCg==",
+            "status": "successed",
+            "message": ""
+        },
+        {
+            "agent_id": "C822D81599C6ED55233EA059A2F153708D4642FA",
+            "data": "",
+            "status": "failed",
+            "message": "Platform mismatch"
+        },
+        {
+            "agent_id": "0E97FA4D6B79E540CA4A54DCC18B55B66D07BC06",
+            "data": "",
+            "status": "pending",
+            "message": ""
+        }
+    ]
+}
