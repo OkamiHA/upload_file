@@ -17,9 +17,9 @@ from base64 import b64decode
 logger = get_logger(__name__)
 logger.setLevel(logging.INFO)
 
-edr_service = EdrService(Config.get_config("edr_url"))
+edr_service = EdrService(Config.get_config("edr_url"), Config.get_config("edr_username"), Config.get_config("edr_password"))
 upload_hunting_service = UploadHuntingService(Config.get_config("upload_hunting_url"))
-login_status = edr_service.login(Config.get_config("edr_username"), Config.get_config("edr_password"))
+login_status = edr_service.login()
 map_tool_id = Config.get_config("map_tool_id", {})
 map_tool_name = Config.get_config("map_tool_name", {})
 
@@ -100,13 +100,13 @@ def run_script_one_agent(customer_id, campaign_name, hunting_type, agent, **kwar
                 logger.info("Zip folder %s to %s in %s", section_folder, section_zip, temp_dir)
                 upload_hunting_task = upload_hunting.delay(customer_id, campaign_name,
                                                            hunting_type, section_zip, hostname=agent["hostname"],
-                                                           section_id=section_id)
+                                                           section_id=section_id, authorization=kwargs.get("authorization"))
                 upload_hunting_result = upload_hunting_task.get()
                 if not upload_hunting_result["success"]:
-                    raise Exception("Upload file %s contains hostname %s got error: %s" %
-                                    (filezip, hostname, upload_hunting_result["message"]))
-                    logger.info("Upload %s contains %s got: %s", filezip,
+                    logger.info("Upload %s contains %s got: %s", section_zip,
                                 hostname, upload_hunting_result)
+                    raise Exception("Upload file %s contains hostname %s got error: %s" %
+                                    (section_zip, hostname, upload_hunting_result["message"]))
                 history_edr.update(uploaded=True)
     except Exception as e:
         logger.error("Run script on agent %s got error %s", agent, e)
