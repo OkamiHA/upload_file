@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import ssl
 import urllib.parse
 from urllib.request import urlretrieve
@@ -30,38 +31,37 @@ class EdrService(object):
         self.get_tool_result_url = urllib.parse.urljoin(edr_url, "/proxyHandler/GetToolResult")
         self.access_token = None
         self.refresh_token = None
+        self.regex_ipv4 = re.compile(
+            "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
         self.username = username
         self.password = password
+        self.token_expired = "token is expired by"
 
     def post(self, url, body, access_token=True):
-        headers = {}
-        if access_token and self.access_token:
-            headers = {"Authorization": "Bearer " + self.access_token}
-        response = requests.post(url, json=body, headers=headers, verify=False, timeout=30)
-        if response.status_code == 200:
-            data = response.json()
-            return data
-        logger.info("Request EDR %s response status_code: %s", url, response.status_code)
-        return {"success": False, "status": response.status_code}
-    
-    def check_expired(self):
-        body_test = {
-            "query": {
-                "compare": {
-                    "field": "hostInfo.computerName",
-                    "function": None,
-                    "operator": "=",
-                    "value": "ANM-CHUYENNT"
-                }
-            },
-            "since": 0,
-            "limit": 50
-        }
+        res = dict()
+        max_calls = 2
+        while max_calls > 0:
+            headers = {}
+            if access_token and self.access_token:
+                headers = {"Authorization": "Bearer " + self.access_token}
+            response = requests.post(url, json=body, headers=headers, verify=False, timeout=30)
+            if response.status_code == 200:
+                data = response.json()
+                if url != self.login_url and self.token_expired in data.get("reason", ""):
+                    max_calls -= 1
+                    result = self.login()
+                else:
+                    res.update(data)
+                    break
+            else:
+                max_calls -= 1
+                logger.info("Request EDR %s response status_code: %s", url, response.status_code)
+                res.update({"success": False, "status": response.status_code})
+        return res
+
+    def login(self):
         try:
-            
-    def login(self, username, password):
-        try:
-            body = {"username": username, "password": password}
+            body = {"username": self.username, "password": self.password}
             login_result = self.post(self.login_url, body, access_token=False)
             if login_result["success"]:
                 self.access_token = login_result["access_token"]
@@ -89,14 +89,24 @@ class EdrService(object):
                 "limit": limit
             }
             if hostname:
-                body["query"] = {
-                    "compare": {
-                        "field": "hostInfo.computerName",
-                        "function": None,
-                        "operator": "~",
-                        "value": hostname
+                if re.search(self.regex_ipv4, hostname):
+                    body["query"] = {
+                        "compare": {
+                            "field": "netInterfaces.addresses",
+                            "function": None,
+                            "operator": "=",
+                            "value": hostname
+                        }
                     }
-                }
+                else:
+                    body["query"] = {
+                        "compare": {
+                            "field": "hostInfo.computerName",
+                            "function": None,
+                            "operator": "~",
+                            "value": hostname
+                        }
+                    }
             return self.post(self.search_agent_url, body)
         except Exception as e:
             logger.info("Search agents by hostname %s EDR got error: %s", hostname, e)
